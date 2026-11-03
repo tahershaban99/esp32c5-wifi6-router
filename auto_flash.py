@@ -42,12 +42,14 @@ print("="*60)
 max_attempts = 30
 for attempt in range(1, max_attempts + 1):
     print(f"[Attempt {attempt}/{max_attempts}] Checking COM7...")
+    sys.stdout.flush()
     res = subprocess.run(cmd, text=True, capture_output=True)
     if res.returncode == 0:
         print("\n" + "="*60)
         print("FLASH SUCCESSFUL! 100%")
         print("="*60)
         print(res.stdout)
+        sys.stdout.flush()
         sys.exit(0)
     else:
         err = res.stderr + "\n" + res.stdout
@@ -57,6 +59,7 @@ for attempt in range(1, max_attempts + 1):
             print("  Detected! Click RST to enter clean ROM bootloader...")
         else:
             print("  Retrying...")
+        sys.stdout.flush()
         time.sleep(1)
 
 print("\nAttempts timed out.")

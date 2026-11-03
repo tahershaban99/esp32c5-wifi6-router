@@ -778,7 +778,7 @@ static esp_err_t api_ota_cloud_check_handler(httpd_req_t *req) {
 esp_err_t web_server_start(void) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.max_uri_handlers = 36;
-    config.max_open_sockets = 8;
+    config.max_open_sockets = 5;
     config.stack_size = 8192;
     config.lru_purge_enable = true;
 

@@ -4,3 +4,4 @@ Write-Host "  Activating ESP-IDF Environment for ESP32-C5 (v6.1)" -ForegroundCol
 Write-Host "========================================================" -ForegroundColor Cyan
 
 & "C:\Espressif\tools\Microsoft.v6.1.PowerShell_profile.ps1"
+

@@ -117,10 +117,16 @@ void app_main(void) {
     ESP_ERROR_CHECK(telegram_bot_init());
 
     // 8. Start Web Server with Embedded Gzipped Dashboard & REST APIs
-    ESP_ERROR_CHECK(web_server_start());
+    esp_err_t ws_err = web_server_start();
+    if (ws_err != ESP_OK) {
+        ESP_LOGE(TAG, "Failed to start Web Server: %s", esp_err_to_name(ws_err));
+    }
 
     // 9. Initialize OTA Manager and Validate Running Partition (Cancel Rollback)
-    ESP_ERROR_CHECK(ota_manager_init());
+    esp_err_t ota_err = ota_manager_init();
+    if (ota_err != ESP_OK) {
+        ESP_LOGW(TAG, "OTA Manager init warning: %s", esp_err_to_name(ota_err));
+    }
 
     // 10. Start Periodic NVS Autosave Task
     storage_start_autosave_task();
