@@ -464,3 +464,12 @@ esp_err_t wifi_5g_napt_start_scan(void) {
     xTaskCreate(wifi_scan_task, "scan_task", 4096, NULL, 2, NULL);
     return ESP_OK;
 }
+
+uint16_t wifi_5g_get_scan_results(wifi_scan_item_t *out_items, uint16_t max_items) {
+    if (!out_items || max_items == 0) return 0;
+    if (s_scan_mutex) xSemaphoreTake(s_scan_mutex, pdMS_TO_TICKS(500));
+    uint16_t count = (s_scan_count < max_items) ? s_scan_count : max_items;
+    memcpy(out_items, s_scan_cache, count * sizeof(wifi_scan_item_t));
+    if (s_scan_mutex) xSemaphoreGive(s_scan_mutex);
+    return count;
+}
