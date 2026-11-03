@@ -30,3 +30,4 @@ echo "  SoftAP SSID: ESP32-C5-5G-Router"
 echo "  Password:    12345678"
 echo "  Dashboard:   http://192.168.4.1"
 echo "========================================================"
+

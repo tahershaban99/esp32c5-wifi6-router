@@ -340,10 +340,7 @@ esp_err_t wifi_5g_napt_init(void) {
     // 6. Set Wi-Fi Mode to APSTA (Concurrent SoftAP and Station)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
 
-    // 7. Apply Dual-Band 5GHz & Wi-Fi 6 Protocols
-    configure_c5_bands_and_protocols();
-
-    // 8. Configure STA Target
+    // 7. Configure STA Target
     wifi_config_t sta_config;
     memset(&sta_config, 0, sizeof(sta_config));
     strncpy((char *)sta_config.sta.ssid, g_router_cfg.sta_ssid, sizeof(sta_config.sta.ssid) - 1);
@@ -353,22 +350,38 @@ esp_err_t wifi_5g_napt_init(void) {
     sta_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &sta_config));
 
-    // 9. Configure SoftAP Broadcast
+    // 8. Configure SoftAP Broadcast (Initial safe 2.4G channel 1 for startup)
     wifi_config_t ap_config;
     memset(&ap_config, 0, sizeof(ap_config));
     strncpy((char *)ap_config.ap.ssid, g_router_cfg.ap_ssid, sizeof(ap_config.ap.ssid) - 1);
     strncpy((char *)ap_config.ap.password, g_router_cfg.ap_password, sizeof(ap_config.ap.password) - 1);
     ap_config.ap.ssid_len = strlen(g_router_cfg.ap_ssid);
-    ap_config.ap.channel = g_router_cfg.ap_channel ? g_router_cfg.ap_channel : 36;
+    ap_config.ap.channel = 1; // Safe 2.4G initial channel before band mode is switched
     ap_config.ap.max_connection = MAX_CONNECTED_DEVICES;
     ap_config.ap.authmode = (strlen(g_router_cfg.ap_password) == 0) ? WIFI_AUTH_OPEN : WIFI_AUTH_WPA2_PSK;
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
 
-    // 10. Power Save Mode
+    // 9. Power Save Mode
     esp_wifi_set_ps(g_router_cfg.wifi_power_save ? WIFI_PS_MIN_MODEM : WIFI_PS_NONE);
 
-    // 11. Start Wi-Fi Hardware
+    // 10. Start Wi-Fi Hardware
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    // 11. Apply Dual-Band (5GHz + 2.4GHz) & Wi-Fi 6 Protocols (AFTER Wi-Fi start)
+    configure_c5_bands_and_protocols();
+
+    // 12. Switch SoftAP to configured channel (e.g. Channel 36 on 5GHz or user channel)
+    uint8_t target_chan = g_router_cfg.ap_channel ? g_router_cfg.ap_channel : (g_router_cfg.ap_band_5g ? 36 : 1);
+    if (target_chan != 1) {
+        ap_config.ap.channel = target_chan;
+        esp_err_t chan_err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
+        if (chan_err != ESP_OK) {
+            ESP_LOGW(TAG, "esp_wifi_set_config(AP channel %d) returned: %s", target_chan, esp_err_to_name(chan_err));
+        } else {
+            ESP_LOGI(TAG, "SoftAP channel switched to %d", target_chan);
+        }
+    }
+
     ESP_LOGI(TAG, "ESP32-C5 Dual-Band Wi-Fi 6 Router Subsystem initialized and operational");
 
     return ESP_OK;

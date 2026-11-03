@@ -34,3 +34,4 @@ jobs:
           esp32c5-pro-router/build/bootloader/bootloader.bin
           esp32c5-pro-router/build/partition_table/partition-table.bin
           esp32c5-pro-router/build/ota_data_initial.bin
+
