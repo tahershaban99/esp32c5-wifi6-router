@@ -1,0 +1,29 @@
+# ESP-IDF build outputs
+build/
+**/build/
+sdkconfig
+sdkconfig.old
+*.bin
+*.elf
+*.map
+!main/web/*.gz
+
+# Python cache & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+
+# IDE / Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary scratch files
+inspect_html.py
+update_js_apis.py
