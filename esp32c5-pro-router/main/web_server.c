@@ -14,12 +14,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include "esp_log.h"
+#include "esp_wifi.h"
 #include "esp_http_server.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
 #include "esp_pm.h"
 #include "esp_timer.h"
 #include "index_html_gz.h"
+
+#define MAX_SCAN_RESULTS 32
 
 static const char *TAG = "web_server";
 static httpd_handle_t s_server = NULL;
@@ -784,79 +787,79 @@ esp_err_t web_server_start(void) {
         return ESP_FAIL;
     }
 
-    httpd_uri_t root_uri = { .uri = "/", .method = HTTP_METHOD_GET, .handler = index_html_handler };
+    httpd_uri_t root_uri = { .uri = "/", .method = HTTP_GET, .handler = index_html_handler };
     httpd_register_uri_handler(s_server, &root_uri);
 
-    httpd_uri_t index_uri = { .uri = "/index.html", .method = HTTP_METHOD_GET, .handler = index_html_handler };
+    httpd_uri_t index_uri = { .uri = "/index.html", .method = HTTP_GET, .handler = index_html_handler };
     httpd_register_uri_handler(s_server, &index_uri);
 
-    httpd_uri_t status_uri = { .uri = "/api/status", .method = HTTP_METHOD_GET, .handler = api_status_handler };
+    httpd_uri_t status_uri = { .uri = "/api/status", .method = HTTP_GET, .handler = api_status_handler };
     httpd_register_uri_handler(s_server, &status_uri);
 
-    httpd_uri_t devs_uri = { .uri = "/api/devices", .method = HTTP_METHOD_GET, .handler = api_devices_handler };
+    httpd_uri_t devs_uri = { .uri = "/api/devices", .method = HTTP_GET, .handler = api_devices_handler };
     httpd_register_uri_handler(s_server, &devs_uri);
 
-    httpd_uri_t dev_upd_uri = { .uri = "/api/device/update", .method = HTTP_METHOD_POST, .handler = api_device_update_handler };
+    httpd_uri_t dev_upd_uri = { .uri = "/api/device/update", .method = HTTP_POST, .handler = api_device_update_handler };
     httpd_register_uri_handler(s_server, &dev_upd_uri);
 
-    httpd_uri_t dev_rst_uri = { .uri = "/api/device/reset_usage", .method = HTTP_METHOD_POST, .handler = api_device_reset_usage_handler };
+    httpd_uri_t dev_rst_uri = { .uri = "/api/device/reset_usage", .method = HTTP_POST, .handler = api_device_reset_usage_handler };
     httpd_register_uri_handler(s_server, &dev_rst_uri);
 
-    httpd_uri_t dev_del_uri = { .uri = "/api/device/delete_offline", .method = HTTP_METHOD_POST, .handler = api_device_delete_offline_handler };
+    httpd_uri_t dev_del_uri = { .uri = "/api/device/delete_offline", .method = HTTP_POST, .handler = api_device_delete_offline_handler };
     httpd_register_uri_handler(s_server, &dev_del_uri);
 
-    httpd_uri_t quota_uri = { .uri = "/api/quota", .method = HTTP_METHOD_POST, .handler = api_quota_handler };
+    httpd_uri_t quota_uri = { .uri = "/api/quota", .method = HTTP_POST, .handler = api_quota_handler };
     httpd_register_uri_handler(s_server, &quota_uri);
 
-    httpd_uri_t tg_get_uri = { .uri = "/api/telegram", .method = HTTP_METHOD_GET, .handler = api_telegram_get_handler };
+    httpd_uri_t tg_get_uri = { .uri = "/api/telegram", .method = HTTP_GET, .handler = api_telegram_get_handler };
     httpd_register_uri_handler(s_server, &tg_get_uri);
 
-    httpd_uri_t tg_post_uri = { .uri = "/api/telegram", .method = HTTP_METHOD_POST, .handler = api_telegram_post_handler };
+    httpd_uri_t tg_post_uri = { .uri = "/api/telegram", .method = HTTP_POST, .handler = api_telegram_post_handler };
     httpd_register_uri_handler(s_server, &tg_post_uri);
 
-    httpd_uri_t tg_test_uri = { .uri = "/api/telegram/test", .method = HTTP_METHOD_POST, .handler = api_telegram_test_handler };
+    httpd_uri_t tg_test_uri = { .uri = "/api/telegram/test", .method = HTTP_POST, .handler = api_telegram_test_handler };
     httpd_register_uri_handler(s_server, &tg_test_uri);
 
-    httpd_uri_t tg_chat_uri = { .uri = "/api/telegram/chat", .method = HTTP_METHOD_POST, .handler = api_telegram_chat_handler };
+    httpd_uri_t tg_chat_uri = { .uri = "/api/telegram/chat", .method = HTTP_POST, .handler = api_telegram_chat_handler };
     httpd_register_uri_handler(s_server, &tg_chat_uri);
 
-    httpd_uri_t scan_uri = { .uri = "/api/wifi/scan", .method = HTTP_METHOD_GET, .handler = api_wifi_scan_handler };
+    httpd_uri_t scan_uri = { .uri = "/api/wifi/scan", .method = HTTP_GET, .handler = api_wifi_scan_handler };
     httpd_register_uri_handler(s_server, &scan_uri);
 
-    httpd_uri_t wifi_cfg_uri = { .uri = "/api/wifi/config", .method = HTTP_METHOD_POST, .handler = api_wifi_config_handler };
+    httpd_uri_t wifi_cfg_uri = { .uri = "/api/wifi/config", .method = HTTP_POST, .handler = api_wifi_config_handler };
     httpd_register_uri_handler(s_server, &wifi_cfg_uri);
 
-    httpd_uri_t perf_uri = { .uri = "/api/performance", .method = HTTP_METHOD_POST, .handler = api_performance_handler };
+    httpd_uri_t perf_uri = { .uri = "/api/performance", .method = HTTP_POST, .handler = api_performance_handler };
     httpd_register_uri_handler(s_server, &perf_uri);
 
-    httpd_uri_t rb_cfg_get = { .uri = "/api/reboot/config", .method = HTTP_METHOD_GET, .handler = api_reboot_config_get_handler };
+    httpd_uri_t rb_cfg_get = { .uri = "/api/reboot/config", .method = HTTP_GET, .handler = api_reboot_config_get_handler };
     httpd_register_uri_handler(s_server, &rb_cfg_get);
 
-    httpd_uri_t rb_cfg_post = { .uri = "/api/reboot/config", .method = HTTP_METHOD_POST, .handler = api_reboot_config_post_handler };
+    httpd_uri_t rb_cfg_post = { .uri = "/api/reboot/config", .method = HTTP_POST, .handler = api_reboot_config_post_handler };
     httpd_register_uri_handler(s_server, &rb_cfg_post);
 
-    httpd_uri_t rb_post = { .uri = "/api/reboot", .method = HTTP_METHOD_POST, .handler = api_reboot_post_handler };
+    httpd_uri_t rb_post = { .uri = "/api/reboot", .method = HTTP_POST, .handler = api_reboot_post_handler };
     httpd_register_uri_handler(s_server, &rb_post);
 
-    httpd_uri_t auth_login = { .uri = "/api/auth/login", .method = HTTP_METHOD_POST, .handler = api_auth_login_handler };
+    httpd_uri_t auth_login = { .uri = "/api/auth/login", .method = HTTP_POST, .handler = api_auth_login_handler };
     httpd_register_uri_handler(s_server, &auth_login);
 
-    httpd_uri_t auth_logout = { .uri = "/api/auth/logout", .method = HTTP_METHOD_POST, .handler = api_auth_logout_handler };
+    httpd_uri_t auth_logout = { .uri = "/api/auth/logout", .method = HTTP_POST, .handler = api_auth_logout_handler };
     httpd_register_uri_handler(s_server, &auth_logout);
 
-    httpd_uri_t auth_pw = { .uri = "/api/auth/change_password", .method = HTTP_METHOD_POST, .handler = api_auth_change_password_handler };
+    httpd_uri_t auth_pw = { .uri = "/api/auth/change_password", .method = HTTP_POST, .handler = api_auth_change_password_handler };
     httpd_register_uri_handler(s_server, &auth_pw);
 
-    httpd_uri_t ota_info = { .uri = "/api/ota/info", .method = HTTP_METHOD_GET, .handler = api_ota_info_handler };
+    httpd_uri_t ota_info = { .uri = "/api/ota/info", .method = HTTP_GET, .handler = api_ota_info_handler };
     httpd_register_uri_handler(s_server, &ota_info);
 
-    httpd_uri_t ota_upld = { .uri = "/api/ota/upload", .method = HTTP_METHOD_POST, .handler = api_ota_upload_handler };
+    httpd_uri_t ota_upld = { .uri = "/api/ota/upload", .method = HTTP_POST, .handler = api_ota_upload_handler };
     httpd_register_uri_handler(s_server, &ota_upld);
 
-    httpd_uri_t ota_url = { .uri = "/api/ota/url", .method = HTTP_METHOD_POST, .handler = api_ota_url_handler };
+    httpd_uri_t ota_url = { .uri = "/api/ota/url", .method = HTTP_POST, .handler = api_ota_url_handler };
     httpd_register_uri_handler(s_server, &ota_url);
 
-    httpd_uri_t ota_cloud = { .uri = "/api/ota/cloud_check", .method = HTTP_METHOD_GET, .handler = api_ota_cloud_check_handler };
+    httpd_uri_t ota_cloud = { .uri = "/api/ota/cloud_check", .method = HTTP_GET, .handler = api_ota_cloud_check_handler };
     httpd_register_uri_handler(s_server, &ota_cloud);
 
     ESP_LOGI(TAG, "Web server started and all 24 REST APIs registered successfully");

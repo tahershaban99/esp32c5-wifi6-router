@@ -289,9 +289,9 @@ esp_err_t wifi_5g_napt_init(void) {
     // 2. Set SoftAP IP Configuration & DHCP Lease Range (192.168.4.1/24)
     esp_netif_ip_info_t ap_ip;
     memset(&ap_ip, 0, sizeof(ap_ip));
-    ip4addr_aton(DEFAULT_AP_IP, &ap_ip.ip);
-    ip4addr_aton(DEFAULT_AP_IP, &ap_ip.gw);
-    ip4addr_aton(DEFAULT_AP_NETMASK, &ap_ip.netmask);
+    esp_netif_str_to_ip4(DEFAULT_AP_IP, &ap_ip.ip);
+    esp_netif_str_to_ip4(DEFAULT_AP_IP, &ap_ip.gw);
+    esp_netif_str_to_ip4(DEFAULT_AP_NETMASK, &ap_ip.netmask);
 
     esp_netif_dhcps_stop(s_ap_netif_handle);
     esp_netif_set_ip_info(s_ap_netif_handle, &ap_ip);
@@ -309,13 +309,13 @@ esp_err_t wifi_5g_napt_init(void) {
         esp_netif_dhcpc_stop(s_sta_netif_handle);
         esp_netif_ip_info_t sta_ip;
         memset(&sta_ip, 0, sizeof(sta_ip));
-        ip4addr_aton(g_router_cfg.sta_ip, &sta_ip.ip);
-        ip4addr_aton(g_router_cfg.sta_gw, &sta_ip.gw);
-        ip4addr_aton(g_router_cfg.sta_mask, &sta_ip.netmask);
+        esp_netif_str_to_ip4(g_router_cfg.sta_ip, &sta_ip.ip);
+        esp_netif_str_to_ip4(g_router_cfg.sta_gw, &sta_ip.gw);
+        esp_netif_str_to_ip4(g_router_cfg.sta_mask, &sta_ip.netmask);
         esp_netif_set_ip_info(s_sta_netif_handle, &sta_ip);
 
         esp_netif_dns_info_t dns_info;
-        ip4addr_aton(g_router_cfg.sta_dns, &dns_info.ip.u_addr.ip4);
+        esp_netif_str_to_ip4(g_router_cfg.sta_dns, &dns_info.ip.u_addr.ip4);
         dns_info.ip.type = IPADDR_TYPE_V4;
         esp_netif_set_dns_info(s_sta_netif_handle, ESP_NETIF_DNS_MAIN, &dns_info);
         ESP_LOGI(TAG, "Static IP configured: IP=%s, GW=%s, Mask=%s, DNS=%s",
