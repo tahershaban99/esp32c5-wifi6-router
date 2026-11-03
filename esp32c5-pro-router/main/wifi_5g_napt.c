@@ -371,7 +371,7 @@ esp_err_t wifi_5g_napt_init(void) {
     configure_c5_bands_and_protocols();
 
     // 12. Switch SoftAP to configured channel (e.g. Channel 36 on 5GHz or user channel)
-    uint8_t target_chan = g_router_cfg.ap_channel ? g_router_cfg.ap_channel : (g_router_cfg.ap_band_5g ? 36 : 1);
+    uint8_t target_chan = g_router_cfg.ap_channel ? g_router_cfg.ap_channel : ((g_router_cfg.ap_band_mode == ROUTER_BAND_MODE_2G_ONLY) ? 1 : 36);
     if (target_chan != 1) {
         ap_config.ap.channel = target_chan;
         esp_err_t chan_err = esp_wifi_set_config(WIFI_IF_AP, &ap_config);
