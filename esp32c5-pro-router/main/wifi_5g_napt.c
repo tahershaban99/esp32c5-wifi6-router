@@ -26,6 +26,10 @@
 #include "lwip/dns.h"
 #include "dhcpserver/dhcpserver.h"
 
+#if !defined(IP_NAPT) || !IP_NAPT
+void ip_napt_enable(uint32_t addr, int enable);
+#endif
+
 static const char *TAG = "wifi_5g_napt";
 
 // Netif handles
@@ -254,6 +258,8 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             }
 
             case IP_EVENT_AP_STAIPASSIGNED: {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
                 ip_event_ap_staipassigned_t *event = (ip_event_ap_staipassigned_t *)event_data;
                 char client_ip_str[16];
                 esp_ip4addr_ntoa(&event->ip, client_ip_str, sizeof(client_ip_str));
@@ -262,6 +268,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                          event->mac[2], event->mac[3], event->mac[4], event->mac[5]);
 
                 router_get_or_create_device(event->mac, client_ip_str, "");
+#pragma GCC diagnostic pop
                 break;
             }
 
