@@ -19,7 +19,7 @@ extern "C" {
 #define ROUTER_HARDWARE_TARGET      "ESP32-C5 Mini (5GHz Wi-Fi 6)"
 
 #define MAX_CONNECTED_DEVICES       12
-#define MAX_REGISTRY_DEVICES        32
+#define MAX_REGISTRY_DEVICES        16
 
 #define DEFAULT_CPU_FREQ_MHZ        240
 #define DEFAULT_ADMIN_USER          "admin"
@@ -28,7 +28,7 @@ extern "C" {
 #define DEFAULT_AP_PASS             "12345678"
 #define DEFAULT_AP_IP               "192.168.4.1"
 #define DEFAULT_AP_NETMASK          "255.255.255.0"
-#define ROUTER_CFG_MAGIC            0xC502
+#define ROUTER_CFG_MAGIC            0xC503
 
 #define GPIO_FACTORY_RESET_PIN      9    // BOOT button on ESP32-C5
 #define FACTORY_RESET_HOLD_MS       10000

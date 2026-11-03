@@ -119,7 +119,8 @@ esp_err_t storage_nvs_load_config(void) {
     if (err != ESP_OK || required_size != sizeof(router_global_config_t) || g_router_cfg.magic != ROUTER_CFG_MAGIC) {
         ESP_LOGW(TAG, "Configuration magic/size mismatch (magic=0x%08lx). Re-initializing clean factory defaults...", (unsigned long)g_router_cfg.magic);
         set_default_configuration();
-        return storage_nvs_save_config();
+        storage_nvs_save_config();
+        return ESP_OK;  // Always return ESP_OK so app_main never aborts
     }
 
     ESP_LOGI(TAG, "Configuration loaded from NVS: STA='%s', AP='%s' (5GHz Wi-Fi 6), Registered Devices=%d",
@@ -140,6 +141,16 @@ esp_err_t storage_nvs_save_config(void) {
     }
 
     err = nvs_set_blob(handle, NVS_BLOB_KEY_CFG, &g_router_cfg, sizeof(router_global_config_t));
+    if (err == ESP_ERR_NVS_NOT_ENOUGH_SPACE) {
+        ESP_LOGW(TAG, "NVS partition out of space! Formatting NVS partition and retrying...");
+        nvs_close(handle);
+        nvs_flash_erase();
+        nvs_flash_init();
+        if (nvs_open(NVS_NAMESPACE_CFG, NVS_READWRITE, &handle) == ESP_OK) {
+            err = nvs_set_blob(handle, NVS_BLOB_KEY_CFG, &g_router_cfg, sizeof(router_global_config_t));
+        }
+    }
+
     if (err == ESP_OK) {
         err = nvs_commit(handle);
         if (err == ESP_OK) {
