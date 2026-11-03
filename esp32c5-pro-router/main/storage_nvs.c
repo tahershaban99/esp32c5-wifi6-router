@@ -32,20 +32,21 @@ router_live_status_t   g_router_status;
  */
 static void set_default_configuration(void) {
     memset(&g_router_cfg, 0, sizeof(router_global_config_t));
+    g_router_cfg.magic = ROUTER_CFG_MAGIC;
 
-    // 1. Default Upstream Wi-Fi (STA)
-    strncpy(g_router_cfg.sta_ssid, "Home_Fiber_5G", sizeof(g_router_cfg.sta_ssid) - 1);
-    strncpy(g_router_cfg.sta_password, "12345678", sizeof(g_router_cfg.sta_password) - 1);
-    g_router_cfg.sta_is_static = true;
-    strncpy(g_router_cfg.sta_ip, "192.168.1.50", sizeof(g_router_cfg.sta_ip) - 1);
+    // 1. Default Upstream Wi-Fi (STA) - Empty initially until configured in dashboard
+    strncpy(g_router_cfg.sta_ssid, "", sizeof(g_router_cfg.sta_ssid) - 1);
+    strncpy(g_router_cfg.sta_password, "", sizeof(g_router_cfg.sta_password) - 1);
+    g_router_cfg.sta_is_static = false;
+    strncpy(g_router_cfg.sta_ip, "", sizeof(g_router_cfg.sta_ip) - 1);
     strncpy(g_router_cfg.sta_mask, "255.255.255.0", sizeof(g_router_cfg.sta_mask) - 1);
-    strncpy(g_router_cfg.sta_gw, "192.168.1.1", sizeof(g_router_cfg.sta_gw) - 1);
+    strncpy(g_router_cfg.sta_gw, "", sizeof(g_router_cfg.sta_gw) - 1);
     strncpy(g_router_cfg.sta_dns, "8.8.8.8", sizeof(g_router_cfg.sta_dns) - 1);
 
-    // 2. Default ESP32-C5 SoftAP (5GHz Wi-Fi 6)
+    // 2. Default ESP32-C5 SoftAP (Dual-Band Wi-Fi 6 on universal Channel 1)
     strncpy(g_router_cfg.ap_ssid, DEFAULT_AP_SSID, sizeof(g_router_cfg.ap_ssid) - 1);
     strncpy(g_router_cfg.ap_password, DEFAULT_AP_PASS, sizeof(g_router_cfg.ap_password) - 1);
-    g_router_cfg.ap_channel = 36;                       // U-NII-1 5GHz Default Channel
+    g_router_cfg.ap_channel = 1;                        // Universal Channel 1 (visible to 100% of devices)
     g_router_cfg.ap_band_mode = ROUTER_BAND_MODE_AUTO;  // Dual-Band Auto (2.4GHz + 5GHz)
     g_router_cfg.ap_protocol = ROUTER_PROTO_AX_HE40;    // 802.11ax Wi-Fi 6 HE40
 
@@ -115,8 +116,8 @@ esp_err_t storage_nvs_load_config(void) {
     err = nvs_get_blob(handle, NVS_BLOB_KEY_CFG, &g_router_cfg, &required_size);
     nvs_close(handle);
 
-    if (err != ESP_OK || required_size != sizeof(router_global_config_t)) {
-        ESP_LOGW(TAG, "Configuration blob size mismatch or read error. Re-initializing factory defaults...");
+    if (err != ESP_OK || required_size != sizeof(router_global_config_t) || g_router_cfg.magic != ROUTER_CFG_MAGIC) {
+        ESP_LOGW(TAG, "Configuration magic/size mismatch (magic=0x%08lx). Re-initializing clean factory defaults...", (unsigned long)g_router_cfg.magic);
         set_default_configuration();
         return storage_nvs_save_config();
     }

@@ -142,8 +142,12 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     if (event_base == WIFI_EVENT) {
         switch (event_id) {
             case WIFI_EVENT_STA_START:
-                ESP_LOGI(TAG, "Wi-Fi STA started. Initiating connection to upstream AP: %s...", g_router_cfg.sta_ssid);
-                esp_wifi_connect();
+                if (strlen(g_router_cfg.sta_ssid) > 0) {
+                    ESP_LOGI(TAG, "Wi-Fi STA started. Connecting to upstream AP: %s...", g_router_cfg.sta_ssid);
+                    esp_wifi_connect();
+                } else {
+                    ESP_LOGI(TAG, "No upstream Wi-Fi configured yet. SoftAP is ready for device connections.");
+                }
                 break;
 
             case WIFI_EVENT_STA_CONNECTED: {
@@ -159,23 +163,13 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 
                 ESP_LOGI(TAG, "STA Connected to '%s' on Channel %d (%s)!",
                          event->ssid, event->channel, g_router_status.sta_band_str);
-
-                // Hardware Single-Radio Constraint:
-                // SoftAP must operate on the exact same radio channel as the connected STA.
-                // Log and synchronize SoftAP channel state.
-                ESP_LOGI(TAG, "Synchronizing SoftAP radio channel to match Upstream STA (Ch: %d, %s)",
-                         event->channel, g_router_status.sta_band_str);
                 break;
             }
 
             case WIFI_EVENT_STA_DISCONNECTED: {
                 wifi_event_sta_disconnected_t *disc = (wifi_event_sta_disconnected_t *)event_data;
-                ESP_LOGW(TAG, "STA disconnected from parent AP (Reason: %d). Reconnecting in 2.5s...", disc->reason);
+                ESP_LOGW(TAG, "STA disconnected from parent AP (Reason: %d)", disc->reason);
                 g_router_status.sta_connected = false;
-
-                // Revert SoftAP channel back to user-configured standalone default if needed
-                vTaskDelay(pdMS_TO_TICKS(2500));
-                esp_wifi_connect();
                 break;
             }
 

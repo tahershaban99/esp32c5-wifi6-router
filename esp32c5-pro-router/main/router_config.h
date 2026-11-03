@@ -24,10 +24,11 @@ extern "C" {
 #define DEFAULT_CPU_FREQ_MHZ        240
 #define DEFAULT_ADMIN_USER          "admin"
 #define DEFAULT_ADMIN_PASS          "admin"
-#define DEFAULT_AP_SSID             "ESP32-C5-Router-5G"
+#define DEFAULT_AP_SSID             "ESP32-C5-Router"
 #define DEFAULT_AP_PASS             "12345678"
 #define DEFAULT_AP_IP               "192.168.4.1"
 #define DEFAULT_AP_NETMASK          "255.255.255.0"
+#define ROUTER_CFG_MAGIC            0xC502
 
 #define GPIO_FACTORY_RESET_PIN      9    // BOOT button on ESP32-C5
 #define FACTORY_RESET_HOLD_MS       10000
@@ -90,6 +91,7 @@ typedef struct {
  * @brief Global Router Persistent Configuration (stored in NVS)
  */
 typedef struct {
+    uint32_t magic;
     // Upstream Wi-Fi (STA)
     char     sta_ssid[33];
     char     sta_password[64];
